@@ -30,17 +30,66 @@ app.get('/api/initialize_database', async (req, res) => {
 
 app.get('/api/transaction', async (req, res) => {
     try {
-        let { search, page = 1, perPage = 10 } = req.query
-        const query = {
-            $or: [
-                { price: { $eq: search } },
-                { title: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
+        let { search, page = 1, perPage = 10, month } = req.query
+        let query = {
+            $and: [
+                {
+                    $or: [
+                        { title: { $regex: search, $options: 'i' } },
+                        { description: { $regex: search, $options: 'i' } },
 
+                    ]
+                },
+                {
+                    $expr: {
+                        $eq: [{ $month: '$dateOfSale' }, month]
+                    }
+                }
             ]
         }
+        if (!isNaN(search)) {
+            query = {
+                $and: [
+                    {
+                        $or: [
+                            { price: { $eq: search } }
+                        ]
+                    },
+                    {
+                        $expr: {
+                            $eq: [{ $month: '$dateOfSale' }, month]
+                        }
+                    }
+                ]
+            }
+        }
+        console.log(search)
+        if (search === "") {
+
+            query = {
+                $expr: {
+                    $eq: [{ $month: '$dateOfSale' }, month]
+                }
+            }
+        }
+
+        if (month == 0) {
+            if (search === "") {
+                query = null
+            } else {
+                query = {
+                    $or: [
+                        { title: { $regex: search, $options: 'i' } },
+                        { description: { $regex: search, $options: 'i' } },
+
+                    ]
+                }
+            }
+        }
+
+
         let data = await model.find(query).limit(perPage).skip((perPage * page) - 10)
-        res.send({ transactions: data })
+        res.json({ transactions: data })
     } catch (error) {
         console.error('Error to response your query', error);
         res.status(500).json({ error: 'Failed to response your query' });
@@ -83,7 +132,7 @@ app.get('/api/statistics', async (req, res) => {
         console.error('Error to response your query', error);
         res.status(500).json({ error: 'Failed to response your query' });
     }
-});
+})
 
 //API for pieChart
 
@@ -106,7 +155,7 @@ app.get('/api/pie_chart', async (req, res) => {
             }
         ]
         let result = await model.aggregate(query)
-        res.send({ piechart: result })
+        res.json({ piechart: result })
 
 
 
@@ -114,12 +163,12 @@ app.get('/api/pie_chart', async (req, res) => {
         console.error('Error to response your query', err);
         res.status(500).json({ error: 'Failed to response your query' });
     }
-});
+})
 
 
 // API for  barChart
 
-app.get('/api/bar-chart', async (req, res) => {
+app.get('/api/bar_chart', async (req, res) => {
 
     try {
         const { month } = req.query;
@@ -162,12 +211,37 @@ app.get('/api/bar-chart', async (req, res) => {
 
 
 
-        res.send({ barchart: result })
+        res.json({ barchart: result })
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
-});
+})
+
+
+//API for combined data
+
+app.get('/api/combined_data', async (req, res) => {
+    const { month } = req.query;
+
+    try {
+        const statistics = await axios.get(`http://localhost:${PORT}/api/statistics?month=${month}`);
+        const piechart = await axios.get(`http://localhost:${PORT}/api/pie_chart?month=${month}`);
+        const barchart = await axios.get(`http://localhost:${PORT}/api/bar_chart?month=${month}`);
+
+        const combinedData = {
+            statistics: statistics.data,
+            pieChart: piechart.data,
+            barChart: barchart.data,
+        };
+
+        res.json(combinedData);
+    } catch (error) {
+        console.error('Error fetching combined data:', error);
+        res.status(500).json({ error: 'Failed to fetch combined data' });
+    }
+})
+
 
 
 
