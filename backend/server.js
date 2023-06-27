@@ -50,37 +50,131 @@ app.get('/api/transaction', async (req, res) => {
 //API for statistics
 
 app.get('/api/statistics', async (req, res) => {
-    const { month } = req.query;
-    let query = {
-        sold: true,
-        $expr: {
-            $eq: [{ $month: '$dateOfSale' }, month]
+    try {
+        const { month } = req.query;
+        let query = {
+            sold: true,
+            $expr: {
+                $eq: [{ $month: '$dateOfSale' }, month]
+            }
         }
-    }
-    let soldItems = await model.find(query).count()
+        let soldItems = await model.find(query).count()
 
-    query = {
-        sold: false,
-        $expr: {
-            $eq: [{ $month: '$dateOfSale' }, month]
+
+        let totalSaleAmount = 0
+        await (await model.find(query)).forEach((el) => {
+            totalSaleAmount += el.price
+        })
+
+
+        query = {
+            sold: false,
+            $expr: {
+                $eq: [{ $month: '$dateOfSale' }, month]
+            }
         }
-    }
-    let unsoldItems = await model.find(query).count()
+        let unsoldItems = await model.find(query).count()
 
-    query = {
-        sold: true,
-        $expr: {
-            $eq: [{ $month: '$dateOfSale' }, month]
-        }
-    }
-    // let sum = 0;
-    let totalSaleAmount = 0
-    await (await model.find(query)).forEach((el) => {
-        totalSaleAmount += el.price
-    })
 
-    res.json({ totalSaleAmount: totalSaleAmount, soldItems: soldItems, unsoldItems: unsoldItems });
+
+
+        res.json({ totalSaleAmount: totalSaleAmount, soldItems: soldItems, unsoldItems: unsoldItems });
+    } catch (error) {
+        console.error('Error to response your query', error);
+        res.status(500).json({ error: 'Failed to response your query' });
+    }
 });
+
+//API for pieChart
+
+app.get('/api/pie_chart', async (req, res) => {
+    try {
+        const { month } = req.query;
+        let query = [
+            {
+                $match: {
+                    $expr: {
+                        $eq: [{ $month: '$dateOfSale' }, parseInt(month)]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$category",
+                    count: { $sum: 1 }
+                }
+            }
+        ]
+        let result = await model.aggregate(query)
+        res.send({ piechart: result })
+
+
+
+    } catch (err) {
+        console.error('Error to response your query', err);
+        res.status(500).json({ error: 'Failed to response your query' });
+    }
+});
+
+
+// API for  barChart
+
+app.get('/api/bar-chart', async (req, res) => {
+
+    try {
+        const { month } = req.query;
+        let query = [
+            {
+                $match: {
+                    $expr: {
+                        $eq: [{ $month: '$dateOfSale' }, parseInt(month)]
+                    }
+                }
+            },
+            {
+                $facet: {
+                    priceRanges: [
+                        {
+                            $bucket: {
+                                groupBy: '$price',
+                                boundaries: [0, 101, 201, 301, 401, 501, 601, 701, 801, 901, Infinity],
+                                output: {
+                                    count: { $sum: 1 }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $unwind: '$priceRanges'
+            },
+            {
+                $project: {
+                    _id: 0,
+                    priceRange: '$priceRanges._id',
+                    count: { $ifNull: ["$priceRanges.count", 0] }
+                }
+            }
+        ]
+
+        const result = await model.aggregate(query);
+
+
+
+        res.send({ barchart: result })
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+
+
+
+
 
 
 app.listen(PORT, () => {
