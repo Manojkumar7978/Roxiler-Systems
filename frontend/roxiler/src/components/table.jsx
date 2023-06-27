@@ -3,7 +3,7 @@ import {
     Center, Input, InputGroup, InputLeftElement, Select, chakra,
     Table,
     Th,
-    Tbody, Thead, Tr, Td, Text, Button, Heading
+    Tbody, Thead, Tr, Td, Text, Button, Heading, Box
 } from '@chakra-ui/react';
 import { TriangleDownIcon, SearchIcon, AttachmentIcon } from '@chakra-ui/icons'
 import { mycontext } from '../context';
@@ -34,43 +34,45 @@ const TTable = () => {
 
     return (
         <chakra.div mt={4}>
-            <chakra.div display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
-                <InputGroup maxW={'250px'}>
-                    <InputLeftElement pointerEvents='none'>
-                        <SearchIcon color='gray.300' />
-                    </InputLeftElement>
-                    <Input onChange={(e) => {
-                        setQiery(e.target.value)
-                    }} focusBorderColor='blue.500' type='text' placeholder='Search Transaction' />
-                </InputGroup>
-                <chakra.div display={'flex'} gap={4}>
-                    <Button isDisabled={page <= 1} onClick={() => {
-                        setPage(page - 1)
-                    }} w={'150px'} colorScheme={'blue'} variant={'outline'}>Previous</Button>
-                    <Button w={'150px'} colorScheme={'blue'} variant={'outline'}>{page}</Button>
-                    <Button isDisabled={transactions.length < 10} onClick={() => {
-                        setPage(page + 1)
-                    }} w={'150px'} colorScheme={'blue'} variant={'outline'}>Next</Button>
-                    <Select onChange={(e) => {
-                        setMonth(e.target.value)
-                    }} focusBorderColor='blue.500' defaultValue={month} icon={<TriangleDownIcon />} >
-                        <option value={0}>All</option>
-                        <option value={1}>Jan</option>
-                        <option value={2}>Feb</option>
-                        <option value={3}>Mar</option>
-                        <option value={4}>Apr</option>
-                        <option value={5}>May</option>
-                        <option value={6}>Jun</option>
-                        <option value={7}>Jul</option>
-                        <option value={8}>Aug</option>
-                        <option value={9}>Sep</option>
-                        <option value={10}>Oct</option>
-                        <option value={11}>Nov</option>
-                        <option value={12}>Dec</option>
-                    </Select>
-                </chakra.div>
+            <Box position={'sticky'} zIndex={1} bg={'white'} top={0} p={4}>
+                <chakra.div display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
+                    <InputGroup maxW={'250px'}>
+                        <InputLeftElement pointerEvents='none'>
+                            <SearchIcon color='gray.300' />
+                        </InputLeftElement>
+                        <Input onChange={(e) => {
+                            setQiery(e.target.value)
+                        }} focusBorderColor='blue.500' type='text' placeholder='Search Transaction' />
+                    </InputGroup>
+                    <chakra.div display={'flex'} gap={4}>
+                        <Button isDisabled={page <= 1} onClick={() => {
+                            setPage(page - 1)
+                        }} w={'150px'} colorScheme={'blue'} variant={'outline'}>Previous</Button>
+                        <Button w={'150px'} colorScheme={'blue'} variant={'outline'}>{page}</Button>
+                        <Button isDisabled={transactions.length < 10} onClick={() => {
+                            setPage(page + 1)
+                        }} w={'150px'} colorScheme={'blue'} variant={'outline'}>Next</Button>
+                        <Select onChange={(e) => {
+                            setMonth(e.target.value)
+                        }} focusBorderColor='blue.500' defaultValue={month} icon={<TriangleDownIcon />} >
+                            <option value={0}>All</option>
+                            <option value={1}>Jan</option>
+                            <option value={2}>Feb</option>
+                            <option value={3}>Mar</option>
+                            <option value={4}>Apr</option>
+                            <option value={5}>May</option>
+                            <option value={6}>Jun</option>
+                            <option value={7}>Jul</option>
+                            <option value={8}>Aug</option>
+                            <option value={9}>Sep</option>
+                            <option value={10}>Oct</option>
+                            <option value={11}>Nov</option>
+                            <option value={12}>Dec</option>
+                        </Select>
+                    </chakra.div>
 
-            </chakra.div>
+                </chakra.div>
+            </Box>
 
             <Center>
                 {
