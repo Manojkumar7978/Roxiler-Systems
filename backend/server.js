@@ -63,7 +63,6 @@ app.get('/api/transaction', async (req, res) => {
                 ]
             }
         }
-        console.log(search)
         if (search === "") {
 
             query = {
